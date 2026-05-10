@@ -5,6 +5,7 @@ import { FiCalendar, FiMapPin, FiShield, FiCheck, FiClock, FiUser, FiPhone, FiMa
 import { MdDirectionsBike } from 'react-icons/md'
 import { Helmet } from 'react-helmet-async'
 import { bikeAPI, bookingAPI } from '../../services/api'
+import { sendBookingRequestEmail } from '../../services/emailService'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
@@ -58,7 +59,23 @@ export default function CheckoutPage() {
         customerPhone: phone,
       })
       const bookingId = res.data.booking._id
-      toast.success('Booking request sent! Owner will contact you soon ✅')
+
+      // Send email via Formspree (works on all hosting)
+      await sendBookingRequestEmail({
+        customerName: user?.name,
+        customerEmail: user?.email,
+        customerPhone: phone,
+        bikeName: bike?.name,
+        bikeCategory: bike?.category,
+        pricePerDay: bike?.pricePerDay,
+        startDate, endDate, totalDays,
+        pickupTime, returnTime, pickupLocation,
+        totalAmount: grandTotal,
+        bookingId,
+        notes: notes || 'None',
+      })
+
+      toast.success('Booking confirmed! Owner will contact you soon ✅')
       navigate(`/booking-confirmation/${bookingId}`)
     } catch (err) {
       toast.error(err.response?.data?.message || 'Something went wrong. Please try again.')
