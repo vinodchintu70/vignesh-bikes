@@ -64,6 +64,49 @@ export const sendBookingRequestEmail = async (bookingData) => {
   }
 }
 
-export const sendBookingConfirmationToCustomer = async () => {
-  return { success: true }
+export const sendBookingConfirmationToCustomer = async (bookingData) => {
+  const {
+    customerEmail, customerName, bikeName,
+    startDate, endDate, pickupTime, dropTime,
+    pickupLocation, totalAmount, totalDays, bookingId,
+  } = bookingData
+
+  const pickupDate = new Date(startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })
+  const returnDate = new Date(endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })
+
+  const payload = {
+    email: customerEmail,
+    _subject: `✅ Booking Confirmed - ${bikeName} | Vignesh Konda Bike Rentals`,
+    _replyto: 'vinodchintu70@gmail.com',
+    '--- STATUS':            '✅ BOOKING CONFIRMED',
+    '--- BOOKING ID':        bookingId || 'N/A',
+    '--- CUSTOMER NAME':     customerName,
+    '--- BIKE':              bikeName,
+    '--- PICKUP DATE':       pickupDate,
+    '--- RETURN DATE':       returnDate,
+    '--- PICKUP TIME':       pickupTime || 'As agreed',
+    '--- DROP TIME':         dropTime || 'As agreed',
+    '--- PICKUP LOCATION':   pickupLocation || 'As agreed',
+    '--- TOTAL DAYS':        `${totalDays} day${totalDays > 1 ? 's' : ''}`,
+    '--- TOTAL AMOUNT':      `Rs.${totalAmount}`,
+    '--- PAYMENT':           'Cash at Pickup',
+    '--- OWNER CONTACT':     'vinodchintu70@gmail.com',
+    '--- MESSAGE':           'Your booking has been APPROVED! Please pay cash when you pick up the bike.',
+  }
+
+  try {
+    const response = await fetch(FORMSPREE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    const result = await response.json()
+    if (response.ok) {
+      console.log('✅ Confirmation email sent to customer')
+      return { success: true }
+    }
+    return { success: false, error: result }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
 }

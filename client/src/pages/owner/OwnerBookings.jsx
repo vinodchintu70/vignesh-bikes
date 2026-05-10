@@ -4,6 +4,7 @@ import { FiCheck, FiX, FiCalendar } from 'react-icons/fi'
 import { MdDirectionsBike } from 'react-icons/md'
 import { Helmet } from 'react-helmet-async'
 import { bookingAPI } from '../../services/api'
+import { sendBookingConfirmationToCustomer } from '../../services/emailService'
 import toast from 'react-hot-toast'
 
 const statusColors = {
@@ -25,9 +26,28 @@ export default function OwnerBookings() {
 
   const handleApprove = async (id) => {
     try {
-      await bookingAPI.approve(id)
+      const { data } = await bookingAPI.approve(id)
       setBookings(prev => prev.map(b => b._id === id ? { ...b, status: 'confirmed' } : b))
-      toast.success('Booking approved!')
+
+      // Send confirmation email to customer via Formspree
+      const booking = bookings.find(b => b._id === id)
+      if (booking?.user?.email) {
+        await sendBookingConfirmationToCustomer({
+          customerEmail: booking.user.email,
+          customerName: booking.user.name,
+          bikeName: booking.bike?.name,
+          startDate: booking.startDate,
+          endDate: booking.endDate,
+          pickupTime: booking.pickupTime,
+          dropTime: booking.dropTime,
+          pickupLocation: booking.pickupLocation,
+          totalAmount: booking.totalAmount,
+          totalDays: booking.totalDays,
+          bookingId: booking._id,
+        })
+      }
+
+      toast.success('Booking approved! Confirmation email sent to customer ✅')
     } catch { toast.error('Failed to approve booking') }
   }
 
