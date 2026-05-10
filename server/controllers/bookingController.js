@@ -6,7 +6,7 @@ const { differenceInDays } = require('date-fns')
 
 exports.createBooking = async (req, res) => {
   try {
-    const { bike: bikeId, startDate, endDate, totalAmount, pickupLocation, pickupTime, dropTime, notes } = req.body
+    const { bike: bikeId, startDate, endDate, totalAmount, pickupLocation, pickupTime, dropTime, notes, customerPhone } = req.body
 
     const bike = await Bike.findById(bikeId).populate('owner', 'name email phone')
     if (!bike) return res.status(404).json({ message: 'Bike not found' })
@@ -50,7 +50,7 @@ exports.createBooking = async (req, res) => {
       ownerName: bike.owner.name,
       customerName: req.user.name,
       customerEmail: req.user.email,
-      customerPhone: req.user.phone || 'Not provided',
+      customerPhone: customerPhone || req.user.phone || 'Not provided',
       bikeName: bike.name,
       bikeCategory: bike.category,
       pricePerDay: bike.pricePerDay,
