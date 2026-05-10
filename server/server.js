@@ -8,6 +8,9 @@ require('dotenv').config()
 
 const app = express()
 
+// Trust proxy - required for Render deployment
+app.set('trust proxy', 1)
+
 app.use(helmet())
 app.use(cors({
   origin: [process.env.CLIENT_URL || 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'],
